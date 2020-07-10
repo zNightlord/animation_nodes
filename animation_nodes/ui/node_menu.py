@@ -600,6 +600,7 @@ class FalloffMenu(bpy.types.Menu):
         insertNode(layout, "an_SoundFalloffNode", "Sound")
         insertNode(layout, "an_SplineFalloffNode", "Spline")
         insertNode(layout, "an_MeshFalloffNode", "Mesh")
+        insertNode(layout, "an_TextureFalloffNode", "Texture")
         layout.separator()
         insertNode(layout, "an_ConstantFalloffNode", "Constant")
         insertNode(layout, "an_CustomFalloffNode", "Custom")

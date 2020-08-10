@@ -8,7 +8,7 @@ from ... data_structures cimport (
 )
 
 @cython.cdivision(True)
-def getTextureColors(texture, Vector3DList locations):
+def getTextureColors(texture, Vector3DList locations, matrix):
     cdef long amount = locations.length
     cdef ColorList colors = ColorList(length = amount)
     cdef DoubleList reds = DoubleList(length = amount)
@@ -19,7 +19,7 @@ def getTextureColors(texture, Vector3DList locations):
     cdef float r, g, b, a
 
     for i in range(amount):
-        r, g, b, a = texture.evaluate(locations[i])
+        r, g, b, a = texture.evaluate(matrix @ locations[i])
         reds.data[i] = r
         greens.data[i] = g
         blues.data[i] = b

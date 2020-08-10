@@ -35,14 +35,14 @@ class TextureFalloffNode(bpy.types.Node, AnimationNode):
         box = layout.box()
         col = box.column(align = True)
         col.label(text = "Info", icon = "INFO")
-        col.label(text = "For External Texture, Alpha Output = Alpha")
-        col.label(text = "For Internal Texture, Alpha Output = Luminance")
+        col.label(text = "For External Texture, Alpha = Alpha")
+        col.label(text = "For Internal Texture, Alpha = Intensity")
 
     def execute(self, texture, transformation, invert, scene):
         if texture is None:
             self.raiseErrorMessage("Texture can't be empty.")
 
         if texture.type == "IMAGE":
-            if texture.image.source in ["SEQUENCE", "MOVIE"]:
+            if texture.image is not None and texture.image.source in ["SEQUENCE", "MOVIE"]:
                 texture.image_user.frame_current = scene.frame_current
         return calculateTextureFalloff(texture, self.mode, transformation, invert)

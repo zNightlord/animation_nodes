@@ -15,7 +15,9 @@ from ... math cimport (
     setRotationMatrix, setTranslationMatrix, setIdentityMatrix,
     setScaleMatrix,
     setMatrixTranslation,
-    transposeMatrix_Inplace)
+    transposeMatrix_Inplace,
+    getMatrix3x3PartDeterminant,
+)
 
 from ... math import matrix4x4ListToEulerList
 
@@ -130,7 +132,49 @@ cdef void scaleFromMatrix(Vector3 *scale, Matrix4 *m):
     scale.x = <float>sqrt(m.a11 * m.a11 + m.a21 * m.a21 + m.a31 * m.a31)
     scale.y = <float>sqrt(m.a12 * m.a12 + m.a22 * m.a22 + m.a32 * m.a32)
     scale.z = <float>sqrt(m.a13 * m.a13 + m.a23 * m.a23 + m.a33 * m.a33)
+    if getMatrix3x3PartDeterminant(m) < 0.0:
+        scale.x *= -1.0
+        scale.y *= -1.0
+        scale.z *= -1.0
 
+def extractMatricesXBasis(Matrix4x4List matrices):
+    cdef Vector3DList bases = Vector3DList(length = len(matrices))
+    cdef Matrix4 *_matrices = matrices.data
+    cdef Vector3 *_bases = bases.data
+    cdef Py_ssize_t i
+
+    for i in range(len(bases)):
+        _bases[i].x = _matrices[i].a11
+        _bases[i].y = _matrices[i].a21
+        _bases[i].z = _matrices[i].a31
+
+    return bases
+
+def extractMatricesYBasis(Matrix4x4List matrices):
+    cdef Vector3DList bases = Vector3DList(length = len(matrices))
+    cdef Matrix4 *_matrices = matrices.data
+    cdef Vector3 *_bases = bases.data
+    cdef Py_ssize_t i
+
+    for i in range(len(bases)):
+        _bases[i].x = _matrices[i].a12
+        _bases[i].y = _matrices[i].a22
+        _bases[i].z = _matrices[i].a32
+
+    return bases
+
+def extractMatricesZBasis(Matrix4x4List matrices):
+    cdef Vector3DList bases = Vector3DList(length = len(matrices))
+    cdef Matrix4 *_matrices = matrices.data
+    cdef Vector3 *_bases = bases.data
+    cdef Py_ssize_t i
+
+    for i in range(len(bases)):
+        _bases[i].x = _matrices[i].a13
+        _bases[i].y = _matrices[i].a23
+        _bases[i].z = _matrices[i].a33
+
+    return bases
 
 # Replicate Matrix
 ###############################################

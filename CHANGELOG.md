@@ -18,6 +18,7 @@
 - Fixed nextBoolean method for XoShiRo256StarStar generators.
 - Fixed OpenGL fragment shaders on Core contexts.
 - Fixed triangulateMesh method of Mesh.
+- Fixed freeze in Is Inside Volume node.
 
 ### Changed
 

@@ -5,6 +5,7 @@ on:
     branches:
       - extranodes
       - en-v2.1-for-blender-v2.83
+      - en-v2.2-for-blender-v2.91-v2.92
   pull_request:
     branches:
       - extranodes

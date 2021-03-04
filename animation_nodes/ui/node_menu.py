@@ -360,6 +360,9 @@ class ObjectMenu(bpy.types.Menu):
         layout.menu("AN_MT_object_utils_menu", text = "Utils")
         layout.separator()
         insertNode(layout, "an_ObjectInstancerNode", "Instancer")
+        layout.separator()
+        insertNode(layout, "an_GetCustomAttributeNode", " Get Custom Attribute")
+        insertNode(layout, "an_SetCustomAttributeNode", " Set Custom Attribute")
 
 class ObjectUtilsMenu(bpy.types.Menu):
     bl_idname = "AN_MT_object_utils_menu"

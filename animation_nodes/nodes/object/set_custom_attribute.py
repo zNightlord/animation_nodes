@@ -96,7 +96,7 @@ class SetCustomAttributeNode(bpy.types.Node, AnimationNode):
             _data = FloatList.fromValues(VirtualDoubleList.create(data, 0).materialize(amount))
         elif self.dataType == "INT":
             _data = VirtualLongList.create(data, 0).materialize(amount)
-        elif attribute.data_type == "FLOAT2":
+        elif self.dataType == "FLOAT2":
             _data = VirtualVector2DList.create(data, Vector((0, 0))).materialize(amount)
         elif self.dataType == "FLOAT_VECTOR":
             _data = VirtualVector3DList.create(data, Vector((0, 0, 0))).materialize(amount)

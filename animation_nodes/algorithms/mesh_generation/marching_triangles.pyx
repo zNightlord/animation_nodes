@@ -50,7 +50,7 @@ def marchingTrianglesOnMesh(Vector3DList points, PolygonIndicesList polygons,
     cdef VertexList vertexList
 
     vertexList.vertexAmount = 0
-    vertexList.data = <Vertex*>PyMem_Malloc(2 * polyAmount * sizeof(Vertex))
+    vertexList.data = <Vertex*>PyMem_Malloc(3 * polyAmount * sizeof(Vertex))
     vertices = vertexList.data
 
     # Initialization of edges contour.
@@ -58,7 +58,7 @@ def marchingTrianglesOnMesh(Vector3DList points, PolygonIndicesList polygons,
     cdef EdgeList edgeList
 
     edgeList.edgeAmount = 0
-    edgeList.data = <Edge*>PyMem_Malloc(polyAmount * sizeof(Edge))
+    edgeList.data = <Edge*>PyMem_Malloc(3 * polyAmount * sizeof(Edge))
     edges = edgeList.data
 
     # Initialization of edgesPrevious.
@@ -66,11 +66,11 @@ def marchingTrianglesOnMesh(Vector3DList points, PolygonIndicesList polygons,
     cdef EdgePreviousList edgePreviousList
 
     edgePreviousList.edgePreviousAmount = 0
-    edgePreviousList.data = <EdgePrevious*>PyMem_Malloc(2 * polyAmount * sizeof(EdgePrevious))
+    edgePreviousList.data = <EdgePrevious*>PyMem_Malloc(3 * polyAmount * sizeof(EdgePrevious))
     edgesPrevious = edgePreviousList.data
 
     cdef Py_ssize_t i
-    for i in range(2 * polyAmount):
+    for i in range(3 * polyAmount):
         edgesPrevious[i].start = -1
         edgesPrevious[i].end = -1
 

@@ -137,7 +137,7 @@ def marchingSquaresOnMesh(Vector3DList points, PolygonIndicesList polygons, Vect
     cdef EdgeList edgeList
 
     edgeList.edgeAmount = 0
-    edgeList.data = <Edge*>PyMem_Malloc(2 * polyAmount * sizeof(Edge))
+    edgeList.data = <Edge*>PyMem_Malloc(3 * polyAmount * sizeof(Edge))
     edges = edgeList.data
 
     # Initialization of edgesPrevious.
@@ -145,11 +145,11 @@ def marchingSquaresOnMesh(Vector3DList points, PolygonIndicesList polygons, Vect
     cdef EdgePreviousList edgePreviousList
 
     edgePreviousList.edgePreviousAmount = 0
-    edgePreviousList.data = <EdgePrevious*>PyMem_Malloc(4 * polyAmount * sizeof(EdgePrevious))
+    edgePreviousList.data = <EdgePrevious*>PyMem_Malloc(6 * polyAmount * sizeof(EdgePrevious))
     edgesPrevious = edgePreviousList.data
 
     cdef Py_ssize_t i
-    for i in range(2 * polyAmount):
+    for i in range(6 * polyAmount):
         edgesPrevious[i].start = -1
         edgesPrevious[i].end = -1
 

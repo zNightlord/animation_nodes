@@ -16,8 +16,8 @@ from ... data_structures import (
 domainItems = [
     ("POINT", "Point", "", "NONE", 0),
     ("EDGE", "Edge", "", "NONE", 1),
-    ("CORNER", "Corner", "", "NONE", 2),
-    ("POLYGON", "Polygon", "NONE", 3),
+    ("FACE", "Face", "NONE", 2),
+    ("CORNER", "Corner", "", "NONE", 3),
 ]
 
 dataTypeItems = [

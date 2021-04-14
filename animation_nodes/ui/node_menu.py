@@ -361,7 +361,6 @@ class ObjectMenu(bpy.types.Menu):
         layout.separator()
         insertNode(layout, "an_ObjectInstancerNode", "Instancer")
         layout.separator()
-        insertNode(layout, "an_GetCustomAttributeNode", " Get Custom Attribute")
         insertNode(layout, "an_SetCustomAttributeNode", " Set Custom Attribute")
 
 class ObjectUtilsMenu(bpy.types.Menu):
@@ -441,6 +440,10 @@ class MeshDataMenu(bpy.types.Menu):
         insertNode(layout, "an_InsertUVMapNode", "Insert UV Map")
         insertNode(layout, "an_SetUVMapNode", "Set UV Map")
         insertNode(layout, "an_SetPolygonMaterialIndexNode", "Set Polygon Material Index")
+        layout.separator()
+        insertNode(layout, "an_GetCustomAttributeNode", " Get Custom Attribute")
+        insertNode(layout, "an_InsertCustomAttributeNode", " Insert Custom Attribute")
+        insertNode(layout, "an_SetCustomAttributeNode", " Set Custom Attribute")
 
 
 regularPolygons = [

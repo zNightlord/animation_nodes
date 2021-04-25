@@ -4,8 +4,8 @@ from ... base_types import AnimationNode
 from ... data_structures import DoubleList
 
 dataTypeItems = [
-    ("FLOAT", "Float", "", "NONE", 0),
-    ("INT", "Integer", "", "NONE", 1),
+    ("INT", "Integer", "", "NONE", 0),
+    ("FLOAT", "Float", "", "NONE", 1),
     ("FLOAT2", "Float2", "", "NONE", 2),
     ("FLOAT_VECTOR", "Vector", "", "NONE", 3),
     ("FLOAT_COLOR", "Color", "", "NONE", 4),
@@ -23,7 +23,7 @@ class GetCustomAttributeNode(bpy.types.Node, AnimationNode):
 
     def create(self):
         self.newInput("Mesh", "Mesh", "mesh")
-        self.newInput("Text", "Attribute Name", "attributeName", value = "")
+        self.newInput("Text", "Name", "attributeName", value = "")
 
         if self.dataType == "FLOAT":
             self.newOutput("Float List", "Values", "data")
@@ -45,21 +45,20 @@ class GetCustomAttributeNode(bpy.types.Node, AnimationNode):
         layout.prop(self, "dataType", text = "")
 
     def execute(self, mesh, attributeName):
-        if mesh is None: return None, None, None
+        if mesh is None: return None, None, None, None
         if attributeName == "": self.raiseErrorMessage("Attribute name can't be empty.")
 
-        attributes = mesh.getAllAttributes()
-        attribute = attributes.get(attributeName, None)
+        attribute = mesh.getCustomAttribute(attributeName)
         if attribute is None:
-            self.raiseErrorMessage(f"""Object does not have attribute with name '{attributeName}'.\nAvailable: {self.getAttributeNames(attributes)}""")
+            self.raiseErrorMessage(
+                    f"Object does not have attribute with name '{attributeName}'."
+                    f"\nAvailable: {mesh.getAllCustomAttributeNames()}"
+            )
 
         if self.dataType != attribute.getListTypeAsString():
-            self.raiseErrorMessage("Wrong output data type.")
+            self.raiseErrorMessage(
+                f"Wrong output data type. Attribute is of type '{attribute.getListTypeAsString()}'.")
 
         if self.dataType == "FLOAT":
             return DoubleList.fromValues(attribute.data), attribute.getTypeAsString(), attribute.getDomainAsString(), self.dataType
         return attribute.data, attribute.getTypeAsString(), attribute.getDomainAsString(), self.dataType
-
-    def getAttributeNames(self, attributes):
-        attributesNames = [key for key in attributes.keys()]
-        return attributesNames

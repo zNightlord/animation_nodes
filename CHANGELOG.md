@@ -35,6 +35,8 @@
 - Fixed wrong types in *Get Struct List Elements* node.
 - Fixed mesh generation methods.
 - Fixed Mix Data node for zero length lists.
+- Fixed conflicts with the Node Wrangler add-on keymap.
+- Fixed incorrect file loading of Shape Key sockets.
 
 ### Changed
 

@@ -279,6 +279,9 @@ class ListMenu(bpy.types.Menu):
         insertNode(layout, "an_SetStructElementsNode", "Set Struct Elements")
         insertNode(layout, "an_GetStructElementsNode", "Get Struct Elements")
         insertNode(layout, "an_GetStructListElementsNode", "Get Struct List Elements")
+        layout.separator()
+        insertNode(layout, "an_ToNumpyNode", "To Numpy")
+        insertNode(layout, "an_FromNumpyNode", "From Numpy")
 
 
 class CreateListMenu(bpy.types.Menu):

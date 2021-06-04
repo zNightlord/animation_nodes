@@ -182,9 +182,42 @@ def quaternionListToAxisListAngleList(QuaternionList qs, bint useDegree = False)
     for i in range(amount):
         quaternionToAxisAngle(vs.data + i, &angle, qs.data + i)
         normalizeVec3_InPlace(vs.data + i)
-        
+
         if useDegree:
-            angle *= radianToDegreeFactor 
-        angles.data[i] = angle   
+            angle *= radianToDegreeFactor
+        angles.data[i] = angle
 
     return vs, angles
+
+def eulerListToFlatDoubleList(EulerList es):
+    cdef Py_ssize_t i, index
+    cdef long amount = es.length
+    cdef DoubleList vs = DoubleList(length = 3 * amount)
+
+    index = 0
+    for i in range(amount):
+        vs.data[index] = es.data[i].x
+        index += 1
+        vs.data[index] = es.data[i].y
+        index += 1
+        vs.data[index] = es.data[i].z
+        index += 1
+
+    return vs
+
+def flatDoubleListToEulerList(DoubleList vs):
+    cdef Py_ssize_t i, index
+    cdef long amount = <long>(vs.length / 3)
+    cdef EulerList es = EulerList(length = amount)
+
+    index = 0
+    for i in range(amount):
+        es.data[i].order = 0
+        es.data[i].x = vs.data[index]
+        index += 1
+        es.data[i].y = vs.data[index]
+        index += 1
+        es.data[i].z = vs.data[index]
+        index += 1
+
+    return es

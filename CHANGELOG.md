@@ -39,6 +39,7 @@
 - Fixed conflicts with the Node Wrangler add-on keymap.
 - Fixed incorrect file loading of Shape Key sockets.
 - Fixed vectorized *Spline Falloff* node.
+- Fixed random crashes in *Mesh Object Output* node.
 
 ### Changed
 
@@ -58,6 +59,8 @@
 - Vectorized *Transform Matrix* node.
 - Remove clamping from the inputs of the *Random Falloff* node.
 - Support FLIP particle systems in the *Particles Data* node.
+- Vectorized *Point Distance Falloff* node.
+- Added *Is Used* property to the value socket in the *Attribute Output* node.
 
 ## 2.2.1 (13 January 2021)
 

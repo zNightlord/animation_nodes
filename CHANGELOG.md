@@ -5,9 +5,11 @@
 - Added support for splines in *3D Viewer* node.
 - Added built-in attributes for Mesh object.
 - Added Vertex Group as attribute for Mesh object.
+- Added *Scene Changed* auto execution option.
 
 ### Fixed
 
+- Fixed *Mesh Object Input* node custom attribute reading with enabled modifiers.
 
 ### Changed
 

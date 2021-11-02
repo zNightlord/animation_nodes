@@ -10,10 +10,12 @@
 ### Fixed
 
 - Fixed *Mesh Object Input* node custom attribute reading with enabled modifiers.
+- Fixed *Insert Vertex Group* node.
 
 ### Changed
 
 - Vectorized *Float To Text* node.
+- Adjust default colors of nodes to match the new default theme.
 
 
 ## 2.2.2 (16 August 2021)

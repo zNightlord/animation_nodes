@@ -13,11 +13,13 @@
 - Fixed *Insert Vertex Group* node.
 - Fixed *Convert* node when converting to Action.
 - Fixed *Object Action Output* node for Actions with named attributes.
+- Fixed failing dialogs after recent API change.
 
 ### Changed
 
 - Vectorized *Float To Text* node.
 - Adjust default colors of nodes to match the new default theme.
+- Optimize execution unit setup time.
 
 
 ## 2.2.2 (16 August 2021)

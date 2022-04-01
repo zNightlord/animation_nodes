@@ -20,6 +20,11 @@ from ... data_structures cimport(
     PolygonIndicesList,
 )
 
+nodeModeItems = [
+    ("TRACER", "Tracer", "Output tracers like splines or mesh lines", "", 0),
+    ("VECTOR", "Vector", "Output only vectors, curls or gradients", "", 1)
+]
+
 tracerModeItems = [
     ("CURL2D", "Curl 2D", "", "", 0),
     ("CURL3D", "Curl 3D", "", "", 1),
@@ -45,7 +50,10 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
 
     __annotations__ = {}
 
-    __annotations__["tracerMode"] = EnumProperty(name = "Mode", default = "CURL2D",
+    __annotations__["nodeMode"] = EnumProperty(name = "Mode", default = "TRACER",
+        items = nodeModeItems, update = AnimationNode.refresh)
+
+    __annotations__["tracerMode"] = EnumProperty(name = "Tracer Mode", default = "CURL2D",
         items = tracerModeItems, update = AnimationNode.refresh)
 
     __annotations__["dataStyle"] = EnumProperty(name = "Output Style Mode", default = "PERVECTOR",
@@ -55,6 +63,12 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
         items = dataTypeItems, update = AnimationNode.refresh)
 
     __annotations__["vectorsOnMesh"] = BoolProperty(name = "Vectors on Mesh", default = False,
+        update = AnimationNode.refresh)
+
+    __annotations__["relativeCurls"] = BoolProperty(name = "Relative Curls", default = False,
+        update = AnimationNode.refresh)
+
+    __annotations__["relativeGradients"] = BoolProperty(name = "Relative Gradients", default = False,
         update = AnimationNode.refresh)
 
     __annotations__["joinMeshes"] = BoolProperty(name = "Join Meshes", default = True,
@@ -78,24 +92,41 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
             self.newInput("Float", "Epsilon", "epsilon", value = 0, minValue = 0, hide = True)
             self.newInput("Float", "Max Distance", "maxDistance", value = 1e+6, minValue = 0, hide = True)
 
-        if self.dataType == "MESH":
-            if not self.joinMeshes:
-                self.newOutput("Mesh List", "Meshes", "meshes")
-            else:
-                self.newOutput("Mesh", "Mesh", "meshOut")
-        elif self.dataType == "SPLINE":
-            self.newOutput("Spline List", "Splines", "splines")
-        elif self.dataType == "STROKE":
-            self.newOutput("GPStroke List", "Strokes", "strokes")
-        self.newOutput("Vector List", "Vectors", "vectorsOut", hide = True)
+        if self.nodeMode == "TRACER":
+            if self.dataType == "MESH":
+                if not self.joinMeshes:
+                    self.newOutput("Mesh List", "Meshes", "meshes")
+                else:
+                    self.newOutput("Mesh", "Mesh", "meshOut")
+            elif self.dataType == "SPLINE":
+                self.newOutput("Spline List", "Splines", "splines")
+            elif self.dataType == "STROKE":
+                self.newOutput("GPStroke List", "Strokes", "strokes")
+
+        self.newOutput("Vector List", "Vectors", "vectorsOut")
+        if self.tracerMode in ["CURL2D", "CURL3D"]:
+            self.newOutput("Vector List", "Curls", "curls")
+        else:
+            self.newOutput("Vector List", "Gradients", "gradients")
 
     def draw(self, layout):
+        layout.prop(self, "nodeMode", text = "")
         layout.prop(self, "tracerMode", text = "")
-        row = layout.row(align = True)
-        row.prop(self, "dataStyle", text = "")
-        row.prop(self, "dataType", text = "")
+
+        if self.nodeMode == "TRACER":
+            row = layout.row(align = True)
+            row.prop(self, "dataStyle", text = "")
+            row.prop(self, "dataType", text = "")
+
         if self.tracerMode in ["CURL3D", "GRADIENT3D"]:
             layout.prop(self, "vectorsOnMesh")
+
+        if self.nodeMode == "VECTOR" and self.vectorsOnMesh:
+            if self.tracerMode == "CURL3D":
+                layout.prop(self, "relativeCurls")
+            elif self.tracerMode == "GRADIENT3D":
+                layout.prop(self, "relativeGradients")
+
         if self.dataType == "MESH":
             layout.prop(self, "joinMeshes")
 
@@ -121,11 +152,13 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
         curlNoiseSettings = newSettings[:3]
         if curlNoiseSettings[0] <= 0: return self.emptyOutput()
 
-        vectorsOut = curlOfFalloff2D(vectors, *curlNoiseSettings, "", None, evaluator)
+        vectorsOut, curls = curlOfFalloff2D(vectors, *curlNoiseSettings, "", None, evaluator)
+        if self.nodeMode == "VECTOR": return vectorsOut, curls
+
         cdef bint cyclic = False
         if self.dataStyle == "PERITERATION":
             cyclic = newSettings[4]
-        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, cyclic)
+        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, curls, cyclic)
 
     def execute_curlOfFalloff3D(self, vectors, *settings):
         newSettings = [*settings]
@@ -135,11 +168,13 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
         curlNoiseSettings = newSettings[:2]
         if curlNoiseSettings[0] <= 0: return self.emptyOutput()
 
-        vectorsOut = curlOfFalloff3D(vectors, *curlNoiseSettings, "", None, evaluator)
+        vectorsOut, curls = curlOfFalloff3D(vectors, *curlNoiseSettings, "", None, evaluator)
+        if self.nodeMode == "VECTOR": return vectorsOut, curls
+
         cdef bint cyclic = False
         if self.dataStyle == "PERITERATION":
             cyclic = newSettings[3]
-        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, cyclic)
+        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, curls, cyclic)
 
     def execute_curlOfFalloff3DOnMesh(self, vectors, *settings):
         newSettings = [*settings]
@@ -155,11 +190,13 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
         curlNoiseSettings[2] = bvhTree
         curlNoiseSettings.append(newSettings[-1])
 
+        vectorsOut, curls = curlOfFalloff3DOnMesh(vectors, *curlNoiseSettings, "", None, evaluator, self.relativeCurls)
+        if self.nodeMode == "VECTOR": return vectorsOut, curls
+
         cdef bint cyclic = False
         if self.dataStyle == "PERITERATION":
             cyclic = newSettings[-3]
-        vectorsOut = curlOfFalloff3DOnMesh(vectors, *curlNoiseSettings, "", None, evaluator)
-        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, cyclic)
+        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, curls, cyclic)
 
     def execute_gradientOfFalloff3D(self, vectors, *settings):
         newSettings = [*settings]
@@ -169,11 +206,13 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
         curlNoiseSettings = newSettings[:3]
         if curlNoiseSettings[0] <= 0: return self.emptyOutput()
 
-        vectorsOut = gradientOfFalloff3D(vectors, *curlNoiseSettings, "", None, evaluator)
+        vectorsOut, gradients = gradientOfFalloff3D(vectors, *curlNoiseSettings, "", None, evaluator)
+        if self.nodeMode == "VECTOR": return vectorsOut, gradients
+
         cdef bint cyclic = False
         if self.dataStyle == "PERITERATION":
             cyclic = newSettings[4]
-        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, cyclic)
+        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, gradients, cyclic)
 
     def execute_gradientOfFalloff3DOnMesh(self, vectors, *settings):
         newSettings = [*settings]
@@ -189,11 +228,13 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
         curlNoiseSettings[2] = bvhTree
         curlNoiseSettings.append(newSettings[-1])
 
-        vectorsOut = gradientOfFalloff3DOnMesh(vectors, *curlNoiseSettings, "", None, evaluator)
+        vectorsOut, gradients = gradientOfFalloff3DOnMesh(vectors, *curlNoiseSettings, "", None, evaluator, self.relativeGradients)
+        if self.nodeMode == "VECTOR": return vectorsOut, gradients
+
         cdef bint cyclic = False
         if self.dataStyle == "PERITERATION":
             cyclic = newSettings[-3]
-        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, cyclic)
+        return self.outputData(len(vectors), curlNoiseSettings[0], vectorsOut, gradients, cyclic)
 
     def getFalloffEvaluator(self, falloff):
         try: return falloff.getEvaluator("LOCATION", True)
@@ -206,20 +247,23 @@ class FalloffTracerNode(bpy.types.Node, AnimationNode):
             (len(polygons) > 0 and polygons.getMaxIndex() >= vertices.length)): return None
         return BVHTree.FromPolygons(vertices, polygons, epsilon = max(epsilon, 0))
 
-    def outputData(self, long amount, long iterations, Vector3DList vectorsOut, bint cyclic):
+    def outputData(self, long amount, long iterations, Vector3DList vectorsOut, curlsOrGradients, bint cyclic):
         if self.dataStyle == "PERVECTOR":
             curves = getCurvesPerVectors(amount, iterations, vectorsOut, self.dataType)
         else:
             curves = getCurvesPerIterations(amount, iterations, vectorsOut, self.dataType, cyclic)
         if self.dataType == "MESH":
             if self.joinMeshes:
-                return Mesh.join(*curves), vectorsOut
+                return Mesh.join(*curves), vectorsOut, curlsOrGradients
             else:
-                return curves, vectorsOut
-        return curves, vectorsOut
+                return curves, vectorsOut, curlsOrGradients
+        return curves, vectorsOut, curlsOrGradients
 
     def emptyOutput(self):
+        if self.nodeMode == "VECTOR":
+            return Vector3DList(), Vector3DList()
+
         if self.joinMeshes and self.dataType == "MESH":
-            return Mesh(), Vector3DList()
+            return Mesh(), Vector3DList(), Vector3DList()
         else:
-            return [], Vector3DList()
+            return [], Vector3DList(), Vector3DList()

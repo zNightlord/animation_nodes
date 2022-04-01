@@ -22,6 +22,7 @@ def curlOfFalloff2D(Vector3DList vectorsIn, long iterations, float step, long st
     cdef FloatList values = FloatList(length = 4 * twiAmount)
     cdef Vector3DList vectorsForFalloff = Vector3DList(length = 4 * twiAmount)
     cdef Vector3DList curlVectors = Vector3DList(length = amount * iterations)
+    cdef Vector3DList curls = Vector3DList(length = amount * iterations)
     cdef Vector3 vector
     cdef float dFxdx, dFydy
     cdef float dr = 1.0 / (2.0 * max(step, 0.00001))
@@ -34,19 +35,20 @@ def curlOfFalloff2D(Vector3DList vectorsIn, long iterations, float step, long st
     amountX4 = 4 * amount
 
     # Initialization of vectors.
-    curlVectors.fill(0)
     for i in range(amount):
         vector = vectorsIn.data[i]
         vectors.data[i] = vector
-        curlVectors.data[i] = vector
 
-    vectorsForFalloff.fill(0)
+    curls.fill((0, 0, 0))
+    curlVectors.fill((0, 0, 0))
+    vectorsForFalloff.fill((0, 0, 0))
     values.fill(0)
     index = 0
-    for i in range(iterations - 1):
+    for i in range(iterations):
         # Set vectors from previous step.
         for j in range(amount):
             vector = vectors.data[j]
+            curlVectors.data[j + index] = vector
 
             # Change along x-axis.
             vectorsForFalloff.data[j] = vector
@@ -60,30 +62,37 @@ def curlOfFalloff2D(Vector3DList vectorsIn, long iterations, float step, long st
             vectorsForFalloff.data[amountX3 + j] = vector
             vectorsForFalloff.data[amountX3 + j].y -= step
 
-        # Calculate base noise field and falloff.
+        # Calculate falloff field.
         values = evaluator.evaluateList(vectorsForFalloff)
 
-        # Calculate curl noise.
-        index += amount
+        # Calculate curl.
         for j in range(amount):
             dFxdx = (values.data[j] - values.data[amountX1 + j]) * dr
             dFydy = (values.data[amountX2 + j] - values.data[amountX3 + j]) * dr
             if style == 1:
                 vectors.data[j].x += dFydy
                 vectors.data[j].y -= dFxdx
+                curls.data[j + index].x = dFydy
+                curls.data[j + index].y = -dFxdx
             elif style == 2:
                 vectors.data[j].x += dFydy
                 vectors.data[j].y += dFxdx
+                curls.data[j + index].x = dFydy
+                curls.data[j + index].y = dFxdx
             elif style == 3:
                 vectors.data[j].x += dFxdx
                 vectors.data[j].y += dFydy
+                curls.data[j + index].x = dFxdx
+                curls.data[j + index].y = dFydy
             elif style == 4:
                 vectors.data[j].x -= dFxdx
                 vectors.data[j].y += dFydy
+                curls.data[j + index].x = -dFxdx
+                curls.data[j + index].y = dFydy
 
-            curlVectors.data[j + index] = vectors.data[j]
+        index += amount
 
-    return curlVectors
+    return curlVectors, curls
 
 
 @cython.cdivision(True)
@@ -100,6 +109,7 @@ def curlOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, str noi
     cdef FloatList values = FloatList(length = 6 * triAmount)
     cdef Vector3DList vectorsForFalloff = Vector3DList(length = 6 * triAmount)
     cdef Vector3DList curlVectors = Vector3DList(length = amount * iterations)
+    cdef Vector3DList curls = Vector3DList(length = amount * iterations)
     cdef Vector3 vector, vectorNew
     cdef float dr = 1.0 / (2.0 * max(step, 0.00001))
     cdef float dFydx, dFzdx, dFxdy, dFzdy, dFxdz, dFydz
@@ -116,19 +126,20 @@ def curlOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, str noi
     triAmountX6 = 6 * triAmount
 
     # Initialization of vectors.
-    curlVectors.fill((0, 0, 0))
     for i in range(amount):
         vector = vectorsIn.data[i]
         vectors.data[i] = vector
-        curlVectors.data[i] = vector
 
+    curls.fill((0, 0, 0))
+    curlVectors.fill((0, 0, 0))
     vectorsForFalloff.fill((0, 0, 0))
     values.fill(0)
     index = 0
-    for i in range(iterations - 1):
+    for i in range(iterations):
         # Set vectors from previous step.
         for j in range(amount):
             vector = vectors.data[j]
+            curlVectors.data[j + index] = vector
 
             vectorsOffset.data[j] = vector
 
@@ -163,16 +174,15 @@ def curlOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, str noi
             vectorsForFalloff.data[triAmountX5 + j] = vector
             vectorsForFalloff.data[triAmountX5 + j].z -= step
 
-        # Calculate base noise field and falloff.
+        # Calculate falloff field.
         values = evaluator.evaluateList(vectorsForFalloff)
 
-        # Calculate curl noise.
+        # Calculate curl.
         for j in range(triAmount):
             dFdx.data[j] = (values.data[j] - values.data[triAmountX1 + j]) * dr
             dFdy.data[j] = (values.data[triAmountX2 + j] - values.data[triAmountX3 + j]) * dr
             dFdz.data[j] = (values.data[triAmountX4 + j] - values.data[triAmountX5 + j]) * dr
 
-        index += amount
         for j in range(amount):
             # dFxdx = dFdx.data[j]
             dFydx = dFdx.data[amountX1 + j]
@@ -189,19 +199,26 @@ def curlOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, str noi
             vectors.data[j].x += dFzdy - dFydz
             vectors.data[j].y += dFxdz - dFzdx
             vectors.data[j].z += dFydx - dFxdy
-            curlVectors.data[j + index] = vectors.data[j]
 
-    return curlVectors
+            curls.data[j + index].x = dFzdy - dFydz
+            curls.data[j + index].y = dFxdz - dFzdx
+            curls.data[j + index].z = dFydx - dFxdy
+
+        index += amount
+
+    return curlVectors, curls
 
 @cython.cdivision(True)
 def curlOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float step, bvhTree,
-                          float maxDistance, str noiseMode, baseNoise, FalloffEvaluator evaluator):
+                          float maxDistance, str noiseMode, baseNoise, FalloffEvaluator evaluator,
+                          bint relativeCurls):
     cdef long amount = vectorsIn.length
     cdef Vector3DList vectors = Vector3DList(length = amount)
     cdef Vector3DList normals = Vector3DList(length = amount)
     cdef FloatList values = FloatList(length = 6 * amount)
     cdef Vector3DList vectorsForFalloff = Vector3DList(length = 6 * amount)
     cdef Vector3DList curlVectors = Vector3DList(length = amount * iterations)
+    cdef Vector3DList curls = Vector3DList(length = amount * iterations)
     cdef Vector3 vector, normal
     cdef float dr = 1.0 / (2.0 * max(step, 0.00001))
     cdef float dFdx, dFdy, dFdz
@@ -216,11 +233,12 @@ def curlOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float step, b
     amountX6 = 6 * amount
 
     # Initialization of vectors.
-    curlVectors.fill(0)
     for i in range(amount):
         vectors.data[i] = vectorsIn.data[i]
 
-    vectorsForFalloff.fill(0)
+    vectorsForFalloff.fill((0, 0, 0))
+    curlVectors.fill((0, 0, 0))
+    curls.fill((0, 0, 0))
     values.fill(0)
     index = 0
     for i in range(iterations):
@@ -232,6 +250,7 @@ def curlOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float step, b
             normals.data[j] = toVector3(bvhNormal)
 
             vectors.data[j] = vector
+            curlVectors.data[j + index] = vector
 
             # Change along x-axis.
             vectorsForFalloff.data[j] = vector
@@ -251,13 +270,11 @@ def curlOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float step, b
             vectorsForFalloff.data[amountX5 + j] = vector
             vectorsForFalloff.data[amountX5 + j].z -= step
 
-        # Calculate base noise field and falloff.
+        # Calculate falloff field.
         values = evaluator.evaluateList(vectorsForFalloff)
 
-        # Calculate curl noise.
+        # Calculate curl.
         for j in range(amount):
-            curlVectors.data[j + index] = vectors.data[j]
-
             dFdx = (values.data[j] - values.data[amountX1 + j]) * dr
             dFdy = (values.data[amountX2 + j] - values.data[amountX3 + j]) * dr
             dFdz = (values.data[amountX4 + j] - values.data[amountX5 + j]) * dr
@@ -266,9 +283,21 @@ def curlOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float step, b
             vectors.data[j].x += normal.z * dFdy - normal.y * dFdz
             vectors.data[j].y += normal.x * dFdz - normal.z * dFdx
             vectors.data[j].z += normal.y * dFdx - normal.x * dFdy
+
+        if relativeCurls:
+            for j in range(amount):
+                curls.data[j + index].x = vectors.data[j].x - vectorsIn.data[j].x
+                curls.data[j + index].y = vectors.data[j].y - vectorsIn.data[j].y
+                curls.data[j + index].z = vectors.data[j].z - vectorsIn.data[j].z
+        else:
+            for j in range(amount):
+                curls.data[j + index].x = vectors.data[j].x - curlVectors.data[j + index].x
+                curls.data[j + index].y = vectors.data[j].y - curlVectors.data[j + index].y
+                curls.data[j + index].z = vectors.data[j].z - curlVectors.data[j + index].z
+
         index += amount
 
-    return curlVectors
+    return curlVectors, curls
 
 @cython.cdivision(True)
 def gradientOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, axisScale,
@@ -278,6 +307,7 @@ def gradientOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, axi
     cdef FloatList values = FloatList(length = 6 * amount)
     cdef Vector3DList vectorsForFalloff = Vector3DList(length = 6 * amount)
     cdef Vector3DList gradientVectors = Vector3DList(length = amount * iterations)
+    cdef Vector3DList gradients = Vector3DList(length = amount * iterations)
     cdef Vector3 vector
     cdef Vector3 newAxisScale = toVector3(axisScale)
     cdef float dr = 1.0 / (2.0 * max(step, 0.00001))
@@ -293,19 +323,20 @@ def gradientOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, axi
     amountX6 = 6 * amount
 
     # Initialization of vectors.
-    gradientVectors.fill(0)
     for i in range(amount):
         vector = vectorsIn.data[i]
         vectors.data[i] = vector
-        gradientVectors.data[i] = vector
 
-    vectorsForFalloff.fill(0)
+    vectorsForFalloff.fill((0, 0, 0))
+    gradientVectors.fill((0, 0, 0))
+    gradients.fill((0, 0, 0))
     values.fill(0)
     index = 0
-    for i in range(iterations - 1):
+    for i in range(iterations):
         # Set vectors from previous step.
         for j in range(amount):
             vector = vectors.data[j]
+            gradientVectors.data[j + index] = vector
 
             # Change along x-axis.
             vectorsForFalloff.data[j] = vector
@@ -325,11 +356,10 @@ def gradientOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, axi
             vectorsForFalloff.data[amountX5 + j] = vector
             vectorsForFalloff.data[amountX5 + j].z -= step
 
-        # Calculate base noise field and falloff.
+        # Calculate falloff field.
         values = evaluator.evaluateList(vectorsForFalloff)
 
         # Calculate curl noise.
-        index += amount
         for j in range(amount):
             dFdx = (values.data[j] - values.data[amountX1 + j]) * dr * newAxisScale.x
             dFdy = (values.data[amountX2 + j] - values.data[amountX3 + j]) * dr * newAxisScale.y
@@ -338,18 +368,25 @@ def gradientOfFalloff3D(Vector3DList vectorsIn, long iterations, float step, axi
             vectors.data[j].x += dFdx
             vectors.data[j].y += dFdy
             vectors.data[j].z += dFdz
-            gradientVectors.data[j + index] = vectors.data[j]
 
-    return gradientVectors
+            gradients.data[j + index].x = dFdx
+            gradients.data[j + index].y = dFdy
+            gradients.data[j + index].z = dFdz
+
+        index += amount
+
+    return gradientVectors, gradients
 
 @cython.cdivision(True)
 def gradientOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float step, bvhTree,
-                              float maxDistance, str noiseMode, baseNoise, FalloffEvaluator evaluator):
+                              float maxDistance, str noiseMode, baseNoise, FalloffEvaluator evaluator,
+                              bint relativeGradients):
     cdef long amount = vectorsIn.length
     cdef Vector3DList vectors = Vector3DList(length = amount)
     cdef FloatList values = FloatList(length = 6 * amount)
     cdef Vector3DList vectorsForFalloff = Vector3DList(length = 6 * amount)
     cdef Vector3DList gradientVectors = Vector3DList(length = amount * iterations)
+    cdef Vector3DList gradients = Vector3DList(length = amount * iterations)
     cdef Vector3 vector
     cdef float dr = 1.0 / (2.0 * max(step, 0.00001))
     cdef float dFdx, dFdy, dFdz
@@ -364,11 +401,12 @@ def gradientOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float ste
     amountX6 = 6 * amount
 
     # Initialization of vectors.
-    gradientVectors.fill(0)
     for i in range(amount):
         vectors.data[i] = vectorsIn.data[i]
 
-    vectorsForFalloff.fill(0)
+    vectorsForFalloff.fill((0, 0, 0))
+    gradientVectors.fill((0, 0, 0))
+    gradients.fill((0, 0, 0))
     values.fill(0)
     index = 0
     for i in range(iterations):
@@ -379,6 +417,8 @@ def gradientOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float ste
             bvhVector = bvhTree.find_nearest(Vector((vector.x, vector.y, vector.z)), maxDistance)[0]
             vector = toVector3(bvhVector)
             vectors.data[j] = vector
+
+            gradientVectors.data[j + index] = vector
 
             # Change along x-axis.
             vectorsForFalloff.data[j] = vector
@@ -398,13 +438,11 @@ def gradientOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float ste
             vectorsForFalloff.data[amountX5 + j] = vector
             vectorsForFalloff.data[amountX5 + j].z -= step
 
-        # Calculate base noise field and falloff.
+        # Calculate falloff field.
         values = evaluator.evaluateList(vectorsForFalloff)
 
         # Calculate curl noise.
         for j in range(amount):
-            gradientVectors.data[j + index] = vectors.data[j]
-
             dFdx = (values.data[j] - values.data[amountX1 + j]) * dr
             dFdy = (values.data[amountX2 + j] - values.data[amountX3 + j]) * dr
             dFdz = (values.data[amountX4 + j] - values.data[amountX5 + j]) * dr
@@ -412,9 +450,21 @@ def gradientOfFalloff3DOnMesh(Vector3DList vectorsIn, long iterations, float ste
             vectors.data[j].x += dFdx
             vectors.data[j].y += dFdy
             vectors.data[j].z += dFdz
+
+        if relativeGradients:
+            for j in range(amount):
+                gradients.data[j + index].x = vectors.data[j].x - vectorsIn.data[j].x
+                gradients.data[j + index].y = vectors.data[j].y - vectorsIn.data[j].y
+                gradients.data[j + index].z = vectors.data[j].z - vectorsIn.data[j].z
+        else:
+            for j in range(amount):
+                gradients.data[j + index].x = vectors.data[j].x - gradientVectors.data[j + index].x
+                gradients.data[j + index].y = vectors.data[j].y - gradientVectors.data[j + index].y
+                gradients.data[j + index].z = vectors.data[j].z - gradientVectors.data[j + index].z
+
         index += amount
 
-    return gradientVectors
+    return gradientVectors, gradients
 
 
 def getCurvesPerVectors(long amount, long iterations, Vector3DList vectorsIn,

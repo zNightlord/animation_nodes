@@ -69,7 +69,7 @@ noiseBasisModeItems2 = [
     ("CELLNOISE", "Cell Noise", "", "", 9)
 ]
 
-class VectorNoiseNode(bpy.types.Node, AnimationNode, Noise3DNodeBase):
+class VectorNoiseNode(AnimationNode, bpy.types.Node, Noise3DNodeBase):
     bl_idname = "an_VectorNoiseNode"
     bl_label = "Vector Noise"
     bl_width_default = 160

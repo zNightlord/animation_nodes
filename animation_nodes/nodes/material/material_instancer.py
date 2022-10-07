@@ -7,11 +7,11 @@ noBaseMatMessage = "No Base Material"
 noPrefixMatMessage = "No Prefix Name"
 
 
-class MaterialInstancerNode(bpy.types.Node, AnimationNode):
+class MaterialInstancerNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_MaterialInstancerNode"
     bl_label = "Material Instancer"
     options = {"NOT_IN_SUBPROGRAM"}
-    
+
     instMaterialBool: BoolProperty(name="Instance Material",
                       description = "Only use when it is required, otherwise keep it off",
                       default=False, update=propertyChanged)
@@ -35,13 +35,13 @@ class MaterialInstancerNode(bpy.types.Node, AnimationNode):
 
     def execute(self, baseMaterial, amount):
         self.errorMessage = ""
-        
+
         if self.prefixName == "":
             self.errorMessage = noPrefixMatMessage
             return []
 
         if self.removeMaterialBool: self.removeMaterials()
-        
+
         if baseMaterial is None:
             self.errorMessage = noBaseMatMessage
             return self.getInstMaterials()

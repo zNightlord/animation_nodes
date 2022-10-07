@@ -5,7 +5,7 @@ from ... events import executionCodeChanged
 from ... base_types import AnimationNode, VectorizedSocket
 from ... data_structures import VirtualDoubleList, VirtualVector3DList
 
-class ParticlesOutputNode(bpy.types.Node, AnimationNode):
+class ParticlesOutputNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_ParticlesOutputNode"
     bl_label = "Particles Output"
     bl_width_default = 180

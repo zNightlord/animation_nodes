@@ -42,7 +42,7 @@ dataTypeItems = [
     ("MESH", "Mesh", "", "Output mesh(s)", 2)
 ]
 
-class FalloffTracerNode(bpy.types.Node, AnimationNode):
+class FalloffTracerNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_FalloffTracerNode"
     bl_label = "Falloff Tracer"
     bl_width_default = 160

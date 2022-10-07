@@ -3,7 +3,7 @@ from . c_utils import getTextureColors
 from ... base_types import AnimationNode, VectorizedSocket
 from ... data_structures import DoubleList, Color, ColorList
 
-class TextureInputNode(bpy.types.Node, AnimationNode):
+class TextureInputNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_TextureInputNode"
     bl_label = "Texture Input"
 

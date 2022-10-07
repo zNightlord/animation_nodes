@@ -22,7 +22,7 @@ distanceModeItems = [
     ("SIZE", "Size", "Define how large the grid will be in total", "NONE", 1)
 ]
 
-class MarchingSquaresNode(bpy.types.Node, AnimationNode):
+class MarchingSquaresNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_MarchingSquaresNode"
     bl_label = "Marching Squares"
     errorHandlingType = "EXCEPTION"

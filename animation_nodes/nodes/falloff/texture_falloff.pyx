@@ -15,7 +15,7 @@ modeItems = [
     ("ALPHA", "Alpha", "Falloff as intensity of alpha color", "NONE", 4)
 ]
 
-class TextureFalloffNode(bpy.types.Node, AnimationNode):
+class TextureFalloffNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_TextureFalloffNode"
     bl_label = "Texture Falloff"
     errorHandlingType = "EXCEPTION"

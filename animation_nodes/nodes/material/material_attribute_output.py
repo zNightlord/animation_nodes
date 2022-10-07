@@ -4,7 +4,7 @@ from ... utils.code import isCodeValid
 from ... events import executionCodeChanged
 from ... base_types import AnimationNode, VectorizedSocket
 
-class MaterialAttributeOutputNode(bpy.types.Node, AnimationNode):
+class MaterialAttributeOutputNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_MaterialAttributeOutputNode"
     bl_label = "Material Attribute Output"
     bl_width_default = 180

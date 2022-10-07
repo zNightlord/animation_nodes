@@ -4,14 +4,14 @@ from ... utils.code import isCodeValid
 from ... events import executionCodeChanged
 from ... base_types import AnimationNode
 
-class MaterialAttributeInputNode(bpy.types.Node, AnimationNode):
+class MaterialAttributeInputNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_MaterialAttributeInputNode"
     bl_label = "Material Attribute Input"
     bl_width_default = 180
     errorHandlingType = "MESSAGE"
 
     attribute: StringProperty(name = "Attribute", default = "",
-        update = executionCodeChanged)   
+        update = executionCodeChanged)
 
     def create(self):
         self.newInput("Material", "Material", "material", defaultDrawType = "PROPERTY_ONLY")

@@ -7,7 +7,7 @@ from ... preferences import getColorSettings
 from ... algorithms.random import getRandomColor
 from ... utils.nodes import newNodeAtCursor, invokeTranslation
 
-class SimulationInputNode(bpy.types.Node, AnimationNode):
+class SimulationInputNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_SimulationInputNode"
     bl_label = "Simulation Input"
 

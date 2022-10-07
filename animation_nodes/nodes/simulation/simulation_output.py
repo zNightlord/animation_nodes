@@ -3,7 +3,7 @@ from bpy.props import *
 from ... events import propertyChanged
 from ... base_types import AnimationNode
 
-class SimulationOutputNode(bpy.types.Node, AnimationNode):
+class SimulationOutputNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_SimulationOutputNode"
     bl_label = "Simulation Output"
     onlySearchTags = True

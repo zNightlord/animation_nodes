@@ -17,7 +17,7 @@ from ... data_structures cimport (
     PolygonIndicesList,
 )
 
-class MarchingTrianglesNode(bpy.types.Node, AnimationNode):
+class MarchingTrianglesNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_MarchingTrianglesNode"
     bl_label = "Marching Triangles"
     errorHandlingType = "EXCEPTION"

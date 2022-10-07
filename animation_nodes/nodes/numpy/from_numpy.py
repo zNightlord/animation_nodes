@@ -26,7 +26,7 @@ dataTypes = [
     ("GENERIC", "Generic", "", "NONE", 9),
 ]
 
-class FromNumpyNode(bpy.types.Node, AnimationNode):
+class FromNumpyNode(AnimationNode, bpy.types.Node):
     bl_idname = "an_FromNumpyNode"
     bl_label = "From Numpy"
 

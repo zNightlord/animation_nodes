@@ -32,6 +32,8 @@ class SimulationInputNode(AnimationNode, bpy.types.Node):
         self.newInput("Scene", "Scene", "scene", hide = True)
 
         self.newOutput("Struct", "Data", "data")
+        self.newOutput("Float", "Delta Time", "deltaTime")
+        self.newOutput("Integer", "Elapsed Time", "elapsedTime")
 
     def draw(self, layout):
         if self.outputNode is None:
@@ -44,16 +46,23 @@ class SimulationInputNode(AnimationNode, bpy.types.Node):
         self.sceneName = scene.name
         self.startFrame = startFrame
         self.endFrame = endFrame
+        deltaTime = 1.0 / scene.render.fps
+        elapsedTime = 0
 
         currentFrame = scene.frame_current
         if currentFrame < startFrame:
-            return ANStruct()
+            self.resetSimulationBlock(simulationBlockIdentifier, startFrame, endFrame)
+            return ANStruct(), deltaTime, elapsedTime
+
         if currentFrame == startFrame:
             self.resetSimulationBlock(simulationBlockIdentifier, startFrame, endFrame)
             self.simulationBlocks[simulationBlockIdentifier + str(currentFrame)] = dataInitial
             self.simulationBlockFrames[simulationBlockIdentifier + str(currentFrame)] = currentFrame
 
-        return self.simulationBlocks.get(simulationBlockIdentifier + str(currentFrame), ANStruct())
+        if currentFrame > endFrame:
+            currentFrame = endFrame
+        elapsedTime = currentFrame - startFrame
+        return self.simulationBlocks.get(simulationBlockIdentifier + str(currentFrame), ANStruct()), deltaTime, elapsedTime
 
     def resetSimulationBlock(self, simulationBlockIdentifier, start, end):
         for key in list(self.simulationBlocks.keys()):
